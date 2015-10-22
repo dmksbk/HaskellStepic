@@ -13,9 +13,9 @@ instance Enum Z where
 		| s == Plus =    m
 		| s == Minus = (-m) where
 			m = sum . zipWith (*) b' $ map (2^) [0..]
-			b' = map int2bit b
-			int2bit Zero = 0
-			int2bit One  = 1
+			b' = map bit2int b
+			bit2int Zero = 0
+			bit2int One  = 1
 
 	-- toEnum	:: Enum a => Int -> a
 	toEnum n = Z s m' where
