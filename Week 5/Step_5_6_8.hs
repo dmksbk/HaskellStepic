@@ -4,13 +4,12 @@ module Step_5_6_8 where
 
 data Reader r a = Reader { runReader :: (r -> a) }
 
-asks = Reader
-
 instance Monad (Reader r) where
   return x = Reader $ \_ -> x
   m >>= k  = Reader $ \r -> runReader (k (runReader m r)) r
 
--- local'  :: (e -> e') -> Reader e' a -> Reader e a
+local'  :: (e -> e') -> Reader e' a -> Reader e a
+local' f m = reader $ \e -> ruReader m (f e)
 
 db = [("John", "123"), ("Mike", "qwerty"), ("Sil", "fjs6s")]
 
