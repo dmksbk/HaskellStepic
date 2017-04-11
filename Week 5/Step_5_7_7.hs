@@ -5,11 +5,6 @@ import Data.Monoid
 
 -- Измените определение типа Shopping и доработайте функцию purchase из предыдущего задания таким образом, чтобы можно было реализовать функцию items, возвращающую список купленных товаров (в том же порядке, в котором они были перечислены при покупке):
 
---newtype Log = Log (Sum Int, [String])
---instance Monoid (Sum Int, [String]) where
---    mempty = (0, [])
---    mappend (s1, l1) (s2, l2) = (s1 + s2, s1 ++ s2)
-
 type Shopping = Writer (Sum Integer, [String]) ()
 
 purchase    :: String -> Integer -> Writer (Sum Integer, [String]) ()
