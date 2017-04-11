@@ -1,4 +1,4 @@
-module Step_5_8_9 where
+module Step_5_8_7 where
 
 import Control.Monad.Writer
 import Control.Monad.State
