@@ -26,8 +26,8 @@
 -- [49,59,69]
 -- GHCi> (\a b c d -> 2*a+3*b+5*c-4*d) >$< x1s >*< x2s >*< x3s >*< x4s
 -- [9,15,21]
-import           Test.QuickCheck
 import           Data.List
+import           Test.QuickCheck
 
 import           Control.Applicative (ZipList (ZipList), getZipList)
 
