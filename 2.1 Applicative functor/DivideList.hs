@@ -1,3 +1,5 @@
+import           Test.QuickCheck
+
 -- Функция
 
 divideList :: Fractional a => [a] -> a
@@ -9,20 +11,17 @@ divideList (x:xs) = (/) x (divideList xs)
 -- GHCi> divideList' [3,4,5]  == ("<-3.0/<-4.0/<-5.0/1.0",3.75)
 -- Используйте аппликативный функтор пары, сохраняя близкую к исходной функции структуру реализации
 --
-import           Test.QuickCheck
-
 divideList' :: (Show a, Fractional a) => [a] -> (String,a)
-divideList' []     = _
-divideList' (x:xs) = (/) <$> _ <*> _
-
+divideList' []     = ("1.0", 1)
+divideList' (x:xs) = (/) <$> (s, x) <*> divideList' xs where
+  s = "<-" ++ show x ++ "/"
 
 -------- Tests --------
-prop_divideList   :: [Int] -> Property
-prop_divideList xs = divideList xs == snd . divideList' $ xs
-
+prop_divideList   :: (Fractional a, Eq a, Show a) => [a] -> Bool
+prop_divideList xs = divideList xs == snd (divideList'  xs)
 
 main = let l = [3..5] in do
-  printLn divideList  l
-  printLn divideList' l
+  print $ divideList  l
+  print $ divideList' l
   -- Do quck checks
-  quickCheck prop_divideList
+  quickCheck (prop_divideList :: [Float] -> Bool)
