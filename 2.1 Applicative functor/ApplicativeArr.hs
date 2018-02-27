@@ -21,7 +21,7 @@ instance Applicative (Arr2 e1 e2) where
 
 instance Applicative (Arr3 e1 e2 e3) where
   pure = Arr3 . const . const . const
-  Arr3 g <*> Arr3 h = Arr3 $ \ e1 e2 e3 -> g e1 e2 e3 (h e1 e2 e3)
+  Arr3 g <*> Arr3 h = Arr3 $ \ e1 e2 e3 -> g e1 e2 e3 (h e1 e2)
 
 main = do
   print $ getArr2 (Arr2 (\x y z -> x+y-z) <*> Arr2 (*)) 2 3
