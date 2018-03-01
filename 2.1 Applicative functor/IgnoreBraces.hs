@@ -7,7 +7,7 @@
 import Text.Parsec
 
 ignoreBraces :: Parsec [Char] u a -> Parsec [Char] u b -> Parsec [Char] u c -> Parsec [Char] u c
-ignoreBraces l r b = l *> b <* r 
+ignoreBraces l r b = l *> b <* r
 
 test = ignoreBraces (string "[[") (string "]]") (many1 letter)
 main = parseTest test "[[ABC]]DEF"
