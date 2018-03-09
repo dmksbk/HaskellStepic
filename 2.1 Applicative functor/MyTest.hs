@@ -1,4 +1,4 @@
-module MyTest (myTest) where
+module MyTest (myTest, myTests) where
 
 rt = "\x1b[31m"
 gt = "\x1b[32m"
@@ -9,4 +9,8 @@ myTest x y =
   if x == y then
     putStrLn $ gt ++ "Correct: " ++ nt ++ show x
   else
-    putStrLn $ rt ++ "Wrong:   " ++ nt ++ show x ++ " /= " ++ show y
+    putStrLn $ rt ++ "Wrong:   " ++ nt ++ show x ++ " <> " ++ show y
+
+myTests :: (Show a, Eq a) => [(a, a)] -> IO ()
+myTests []     = return ()
+myTests (t:ts) = myTest (fst t) (snd t) >> myTests ts
