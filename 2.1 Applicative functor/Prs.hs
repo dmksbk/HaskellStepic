@@ -1,6 +1,6 @@
 {-# LANGUAGE MonadComprehensions #-}
 import           Control.Applicative
-import           Data.Char           (digitToInt)
+import           Data.Char           (digitToInt, isDigit)
 import           Data.Maybe          (isJust)
 import           MyTest
 
@@ -95,7 +95,46 @@ tests4 =
 many1 :: Prs a -> Prs [a]
 many1 p = (:) <$> p <*> (many1 p <|> pure [])
 
--- Функцию char :: Char -> Prs Char включать в решение не нужно, но полезно реализовать для локального тестирования.
+------------------------------------------
+
+-- Реализуйте парсер nat :: Prs Int для натуральных чисел, так чтобы парсер
+mult  :: Prs Int
+mult = (*) <$> nat <* char '*' <*> nat
+
+satisfy :: (Char -> Bool) -> Prs Char
+satisfy p = Prs fun where
+  fun []                  = Nothing
+  fun (x:xs) | p x        = Just (x, xs)
+             | otherwise  = Nothing
+
+digit :: Prs Int
+digit = digitToInt <$> satisfy isDigit
+
+digits :: Prs [Int]
+digits = many1 digit
+
+-- nat     :: Prs Int
+-- nat = f <$> digit <*> (nat <|> pure 0) where
+--   f x y = 10 * x + y
+
+nat     :: Prs Int
+nat = foldl (\ x y -> 10*x+y) 0 <$> digits
+
+-- обладал таким поведением
+tests5 =
+  [ lbl "nat for Prs"
+  , runPrs nat "0C"       =?= Just (0, "C")
+  , runPrs nat "7b"       =?= Just (7, "b")
+  , runPrs nat "28K"      =?= Just (28, "K")
+  , runPrs nat "123"      =?= Just (123, "")
+  , runPrs nat "45AB"     =?= Just (45, "AB")
+  , lbl "mul for Prs"
+  , runPrs mult "14*3"    =?= Just (42,"")
+  , runPrs mult "64*32"   =?= Just (2048,"")
+  , runPrs mult "77*0"    =?= Just (0,"")
+  , runPrs mult "2*77AAA" =?= Just (154,"AAA")
+  ]
 
 ------------------------------------------
-main = sequence_ $ tests1 ++ tests2 ++ tests3 ++ tests4
+main = sequence_ $
+  tests1 ++ tests2 ++ tests3 ++ tests4 ++ tests5
