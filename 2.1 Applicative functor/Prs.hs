@@ -9,7 +9,8 @@ newtype Prs a = Prs { runPrs :: String -> Maybe (a, String) }
 
 -- Сделайте этот парсер представителем класса типов Functor.
 tests1 =
-  [ runPrs anyChr "ABC"                  =?= Just ('A',"BC")
+  [ lbl "instance Functor Prs"
+  , runPrs anyChr "ABC"                  =?= Just ('A',"BC")
   , runPrs anyChr ""                     =?= Nothing
   , runPrs (digitToInt <$> anyChr) "BCD" =?= Just (11,"CD")
   ]
@@ -29,7 +30,8 @@ anyChr = Prs f where
 ------------------------------------------
 -- Сделайте парсер из предыдущей задачи аппликативным функтором с естественной для парсера семантикой:
 tests2 =
-  [ runPrs ((,,) <$> anyChr <*> anyChr <*> anyChr) "ABCDE" =?= Just (('A','B','C'),"DE")
+  [ lbl "instance Applicative Prs"
+  , runPrs ((,,) <$> anyChr <*> anyChr <*> anyChr) "ABCDE" =?= Just (('A','B','C'),"DE")
   , runPrs (anyChr *> anyChr) "ABCDE"                      =?= Just ('B',"CDE")
   ]
 
@@ -62,7 +64,8 @@ instance Applicative Prs where
 ------------------------------------------
 -- Сделайте парсер представителем класса типов Alternative с естественной для парсера семантикой:
 tests3 =
-  [ runPrs (char 'A' <|> char 'B') "ABC" =?= Just ('A',"BC")
+  [ lbl "instance Alternative Prs"
+  , runPrs (char 'A' <|> char 'B') "ABC" =?= Just ('A',"BC")
   , runPrs (char 'A' <|> char 'B') "BCD" =?= Just ('B',"CD")
   , runPrs (char 'A' <|> char 'B') "CDE" =?= Nothing
   ]
@@ -80,4 +83,19 @@ instance Alternative Prs where
   x <|> y = Prs fun where
     fun s = let xs = runPrs x s in if isJust xs then xs else runPrs y s
 
-main = sequence_ $ tests1 ++ tests2 ++ tests3
+------------------------------------------
+-- Реализуйте парсер-комбинатор many1 :: Prs a -> Prs [a], который отличается от many только тем, что он терпит неудачу в случае, когда парсер-аргумент неудачен на начале входной строки.
+
+tests4 =
+  [ lbl "many1 for Prs"
+  , runPrs (many1 $ char 'A') "AAABCDE" =?= Just ("AAA","BCDE")
+  , runPrs (many1 $ char 'A') "BCDE"    =?= Nothing
+  ]
+
+many1 :: Prs a -> Prs [a]
+many1 p = (:) <$> p <*> (many1 p <|> pure [])
+
+-- Функцию char :: Char -> Prs Char включать в решение не нужно, но полезно реализовать для локального тестирования.
+
+------------------------------------------
+main = sequence_ $ tests1 ++ tests2 ++ tests3 ++ tests4
