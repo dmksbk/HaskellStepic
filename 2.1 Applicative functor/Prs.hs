@@ -113,12 +113,8 @@ digit = digitToInt <$> satisfy isDigit
 digits :: Prs [Int]
 digits = many1 digit
 
--- nat     :: Prs Int
--- nat = f <$> digit <*> (nat <|> pure 0) where
---   f x y = 10 * x + y
-
 nat     :: Prs Int
-nat = foldl (\ x y -> 10*x+y) 0 <$> digits
+nat = foldl (\ x y -> 10 * x + y) 0 <$> digits
 
 -- обладал таким поведением
 tests5 =
