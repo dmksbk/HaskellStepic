@@ -28,7 +28,13 @@ instance Foldable Levelorder where
 triv = Branch (Branch Nil 'l' Nil) 'c' (Branch Nil 'r' Nil)
 tree = Branch (Branch Nil 1 (Branch Nil 2 Nil)) 3 (Branch Nil 4 Nil)
 tests1 =
-  [ lbl "Foldable DFS Tree lcr"
+  [ lbl "  3  "
+  , lbl " / \\ "
+  , lbl " 1  4"
+  , lbl "  \\"
+  , lbl "   2"
+  , putStrLn ""
+  , lbl "Foldable DFS Tree lcr"
   , (foldr (:) [] triv)          =?= "lcr"
   , (foldr (:) [] tree)           =?= [1,2,3,4]
   , lbl "Foldable Preorder DFS tree clr"
