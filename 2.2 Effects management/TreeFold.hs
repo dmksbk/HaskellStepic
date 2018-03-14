@@ -41,18 +41,16 @@ getSibls Nil            = error "getSibl on Nil"
 getSibls (Branch l _ r) = [l, r]
 
 getLevels :: [Tree a] -> [[a]]
+getLevels [] = [[]]
 getLevels bs = roots : getLevels sibls where
   bs'   = filter isBranch bs
-  roots = bs' >>=  getRoots
+  roots = bs' >>= getRoots
   sibls = bs' >>= getSibls
 
 newtype Levelorder a = LevelO (Tree a)    deriving (Eq, Show)
 instance Foldable Levelorder where
-  foldr _ ini (LevelO Nil)            = ini
-  foldr f ini (LevelO b@(Branch _ _ _)) = undefined
-  --foldr f ini (LevelO b@(Branch _ _ _)) = foldr f ini . concat $ getL [b] where
-  --  getL bs = let bs' = filter isBranch bs in
-
+  foldr _ ini (LevelO Nil)              = ini
+  foldr f ini (LevelO b@(Branch _ _ _)) = foldr f ini . concat . getLevels $ [b]
 
 triv = Branch (Branch Nil 'l' Nil) 'c' (Branch Nil 'r' Nil)
 tree = Branch (Branch Nil 1 (Branch Nil 2 Nil)) 3 (Branch Nil 4 Nil)
