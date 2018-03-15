@@ -6,6 +6,7 @@ infixr 9 |.|
 newtype (|.|) f g a = Cmps { getCmps :: f (g a) }  deriving (Eq,Show)
 
 instance (Foldable f, Foldable g) => Foldable (f |.| g) where
+  -- foldMap :: (Monoid m, Foldable t) => (a -> m) -> t a -> m
   foldMap = undefined
 
 -- tests1 =
