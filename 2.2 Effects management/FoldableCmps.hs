@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 
-module Main where
+module FoldableCmps where
 
 -- import           Data.Monoid
 -- import           MyTest
@@ -17,10 +17,8 @@ instance (Applicative f, Applicative g) => Applicative (f |.| g) where
   pure = Cmps . pure . pure
   Cmps u <*> Cmps x = Cmps $ fmap (<*>) u <*> x
 
-instance (Foldable f, Foldable g) => Foldable (f |.| g) where
-  -- foldMap :: (Monoid m, Foldable t) => (a -> m) -> t a -> m
-  -- foldMap u (Cmps x) = foldMap (foldMap u) u
-  foldMap = undefined
+instance (Foldable f, Foldable g, Functor f, Functor g) => Foldable (f |.| g) where
+  foldMap u x = foldr mappend mempty (fmap (foldMap u) (getCmps x))
 
 -- tests1 =
 --   [ 3 =?= maximum $ Cmps [Nothing, Just 2, Just 3]
@@ -29,5 +27,5 @@ instance (Foldable f, Foldable g) => Foldable (f |.| g) where
 
 -- main = sequence_ tests1
 main :: IO ()
-main = putStrLn "Hallo world"
-  -- putStrLn . maximum . Cmps $ [Nothing, Just 2, Just 3]
+main = do
+  putStrLn . maximum . Cmps $ [Nothing, Just "2", Just "3"]
