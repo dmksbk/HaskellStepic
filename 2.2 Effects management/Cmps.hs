@@ -25,6 +25,15 @@ instance (Foldable f, Foldable g, Functor f, Functor g) => Foldable (f |.| g) wh
 --   , 7 =?= length $ Cmps [[1,2], [], [3,4,5,6,7]]
 --   ]
 
+-- Сделайте тип представителем класса типов Traversable при условии, что аргументы композиции являются представителями Traversable.
+instance (Traversable f, Traversable g) => Traversable (f |.| g) where
+  traverse u (Cmps x) = Cmps <$> traverse (traverse u) x
+
+-- GHCi> sequenceA (Cmps [Just (Right 2), Nothing])
+-- Right (Cmps {getCmps = [Just 2,Nothing]})
+-- GHCi> sequenceA (Cmps [Just (Left 2), Nothing])
+-- Left 2
+
 -- main = sequence_ tests1
 main :: IO ()
 main = putStrLn . maximum . Cmps $ [Nothing, Just "2", Just "3"]
