@@ -18,8 +18,8 @@ instance (Applicative f, Applicative g) => Applicative (f |.| g) where
   Cmps u <*> Cmps x = Cmps $ fmap (<*>) u <*> x
 
 instance (Foldable f, Foldable g, Functor f, Functor g) => Foldable (f |.| g) where
-  foldMap u x = foldr mappend mempty (fmap (foldMap u) (getCmps x))
-
+  -- foldMap u x = foldr mappend mempty (fmap (foldMap u) (getCmps x))
+  foldMap u = foldMap (foldMap u) . getCmps
 -- tests1 =
 --   [ 3 =?= maximum $ Cmps [Nothing, Just 2, Just 3]
 --   , 7 =?= length $ Cmps [[1,2], [], [3,4,5,6,7]]
@@ -27,5 +27,4 @@ instance (Foldable f, Foldable g, Functor f, Functor g) => Foldable (f |.| g) wh
 
 -- main = sequence_ tests1
 main :: IO ()
-main = do
-  putStrLn . maximum . Cmps $ [Nothing, Just "2", Just "3"]
+main = putStrLn . maximum . Cmps $ [Nothing, Just "2", Just "3"]
