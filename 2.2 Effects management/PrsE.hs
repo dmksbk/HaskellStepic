@@ -48,10 +48,15 @@ instance Applicative PrsE where
 --GHCi> runPrsE (do {a <- charE 'A'; b <- charE 'B'; return (a,b)}) "BCD" =?= Left "unexpected B"
 
 instance Monad PrsE where
-    (PrsE m) >>= k = PrsE $ \ s -> case m s of
+    m >>= k = PrsE $ \ s -> case runPrsE m s of
         Left  e         -> Left e
-        Right (a, s')   -> Right (k a, s')
+        Right (a, s')   -> runPrsE (k a) s'
 
+prs1    :: PrsE (Char, Char)
+prs1 = do
+    a <- charE 'A'
+    b <- charE 'B'
+    return (a, b)
 
 main = myTests
   [ (runPrsE (charE 'A') "ABC",                            Right ('A',"BC"))
@@ -62,7 +67,7 @@ main = myTests
   , (runPrsE ((,) <$> anyE <* charE 'C' <*> anyE) "ABCDE", Left "unexpected B")
   , (runPrsE ((,) <$> anyE <* charE 'B' <*> anyE) "AB",    Left "unexpected end of input")
   --] >> myTests
-  --[ runPrsE (do {a <- charE 'A'; b <- charE 'B'; return (a,b)}) "ABC" =?= Right (('A','B'),"C")
-  --, runPrsE (do {a <- charE 'A'; b <- charE 'B'; return (a,b)}) "ACD" =?= Left "unexpected C"
-  --, runPrsE (do {a <- charE 'A'; b <- charE 'B'; return (a,b)}) "BCD" =?= Left "unexpected B"
+  --[ (runPrsE prs1 "ABC") =?= (Right (('A','B'),"C"))
+  --, runPrsE prs1 "ACD" =?= Left "unexpected C"
+  --, runPrsE prs1 "BCD" =?= Left "unexpected B"
   ]
