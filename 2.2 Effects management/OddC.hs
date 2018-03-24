@@ -38,12 +38,17 @@ instance Foldable OddC where
 toList  :: OddC a -> [a]
 toList = foldr (:) []
 
+fromList  :: [a] -> OddC a
+fromList [] = error "fromList on empty list"
+fromList [x] = Un x
+fromList (x:y:rest) = Bi x y $ fromList rest
+
 instance Applicative OddC where
   -- class Functor f => Applicative (f :: * -> *) where
   --   pure :: a -> f a
   --   (<*>) :: f (a -> b) -> f a -> f b
   pure = Un
-  fx <*> vs = undefined
+  fs <*> vs = fromList $ toList fs <*> toList vs
 
 instance Traversable OddC where
   --class (Functor t, Foldable t) => Traversable (t :: * -> *) where
@@ -52,7 +57,7 @@ instance Traversable OddC where
   traverse f (Bi x y rest) = Bi <$> f x <*> f y <*> traverse f rest
   --class (Functor t, Foldable t) => Traversable (t :: * -> *) where
   --  sequenceA :: Applicative f => t (f a) -> f (t a)
-  sequenceA (Un x)        = pure x
+  sequenceA (Un x)        = Un <$> x
   sequenceA (Bi x y rest) = Bi <$> x <*> y <*> sequenceA rest
 
 -- GHCi> (+1) <$> cnt5                  == Bi 4 5 (Bi 2 3 (Un 43))
