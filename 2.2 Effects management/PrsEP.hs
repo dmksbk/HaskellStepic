@@ -100,6 +100,22 @@ tsts3 =
   , parseEP testP "B"               =?= Left "pos 2: unexpected end of input"
   ]
 
+-------------------------------------------------------------------------------
+
+-- Сделайте парсер представителем класса типов Alternative, обеспечив следующее поведение для пары неудачных альтернатив: сообщение об ошибке возвращается из той альтернативы, которой удалось распарсить входную строку глубже.
+
+tripleP [a,b,c] = (\x y z -> [x,y,z]) <$> charEP a <*> charEP b <*>  charEP c
+
+tsts4 =
+  [ runPrsEP empty 0 "ABCDEFG"                      =?= (0,Left "pos 0: empty alternative")
+  , parseEP (tripleP "ABC" <|> tripleP "ADC") "ABE" =?= Left "pos 3: unexpected E"
+  , parseEP (tripleP "ABC" <|> tripleP "ADC") "ADE" =?= Left "pos 3: unexpected E"
+  , parseEP (tripleP "ABC" <|> tripleP "ADC") "AEF" =?= Left "pos 2: unexpected E"
+  ]
+
+
+-------------------------------------------------------------------------------
+
 main           :: IO ()
 main = sequence_ $
   tsts1 ++ tsts2 ++ tsts3
