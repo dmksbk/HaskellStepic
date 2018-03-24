@@ -1,5 +1,6 @@
 import           Data.Char (digitToInt)
-import           MyTest    (myTests, (=?=))
+import           Control.Applicative
+-- import           MyTest    (myTests, (=?=))
 
 -- Рассмотрим более продвинутый парсер, позволяющий возвращать пользователю причину неудачи при синтаксическом разборе:
 newtype PrsE a = PrsE { runPrsE :: String -> Either String (a, String) }
@@ -57,17 +58,49 @@ prs1 = do
     a <- charE 'A'
     b <- charE 'B'
     return (a, b)
+--------------------------------------------------
 
-main = myTests
-  [ (runPrsE (charE 'A') "ABC",                            Right ('A',"BC"))
-  , (runPrsE (charE 'A') "BCD",                            Left "unexpected B")
-  , (runPrsE (charE 'A') "",                               Left "unexpected end of input")
-  ] >> myTests
-  [ (runPrsE ((,) <$> anyE <* charE 'B' <*> anyE) "ABCDE", Right (('A','C'),"DE"))
-  , (runPrsE ((,) <$> anyE <* charE 'C' <*> anyE) "ABCDE", Left "unexpected B")
-  , (runPrsE ((,) <$> anyE <* charE 'B' <*> anyE) "AB",    Left "unexpected end of input")
-  --] >> myTests
-  --[ (runPrsE prs1 "ABC") =?= (Right (('A','B'),"C"))
-  --, runPrsE prs1 "ACD" =?= Left "unexpected C"
-  --, runPrsE prs1 "BCD" =?= Left "unexpected B"
-  ]
+
+-- Предположим мы сделали парсер PrsE a представителем классов типов Alternative следующим образом
+
+instance Alternative PrsE where
+  empty = PrsE f where
+    f _ = Left "empty alternative"
+  p <|> q = PrsE f where
+    f s = let ps = runPrsE p s
+      in if null ps
+         then runPrsE q s
+         else ps
+
+-- Эта реализация нарушает закон дистрибутивности для Alternative:
+
+-- GHCi> runPrsE ((charE 'A' <|> charE 'B') *> charE 'C') "ABC"
+-- Left "unexpected B"
+-- GHCi> runPrsE (charE 'A' *> charE 'C' <|> charE 'B' *> charE 'C') "ABC"
+-- Left "unexpected A"
+
+-- От какого парсера приходит сообщение об ошибке в первом и втором примерах?
+
+-- Тест — Выберите один или несколько вариантов из списка
+-- (1) charE 'A'
+-- (1) charE 'B'
+-- (1) charE 'C'
+-- (2) charE 'A'
+-- (2) charE 'B'
+-- (2) левый charE 'C'
+-- (2) правый charE 'C'
+
+main = print "No tests"
+-- main = myTests
+--   [ (runPrsE (charE 'A') "ABC",                            Right ('A',"BC"))
+--   , (runPrsE (charE 'A') "BCD",                            Left "unexpected B")
+--   , (runPrsE (charE 'A') "",                               Left "unexpected end of input")
+--   ] >> myTests
+--   [ (runPrsE ((,) <$> anyE <* charE 'B' <*> anyE) "ABCDE", Right (('A','C'),"DE"))
+--   , (runPrsE ((,) <$> anyE <* charE 'C' <*> anyE) "ABCDE", Left "unexpected B")
+--   , (runPrsE ((,) <$> anyE <* charE 'B' <*> anyE) "AB",    Left "unexpected end of input")
+--   --] >> myTests
+--   --[ (runPrsE prs1 "ABC") =?= (Right (('A','B'),"C"))
+--   --, runPrsE prs1 "ACD" =?= Left "unexpected C"
+--   --, runPrsE prs1 "BCD" =?= Left "unexpected B"
+--   ]
