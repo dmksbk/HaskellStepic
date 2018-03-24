@@ -65,14 +65,6 @@ instance Traversable OddC where
 -- GHCi> sum cnt5                       == 52
 -- GHCi> traverse (\x->[x+2,x-2]) cnt1  == [Un 44,Un 40]
 
-instance Monad OddC where
-  -- class Applicative m => Monad (m :: * -> *) where
-  --   (>>=) :: m a -> (a -> m b) -> m b
-  --   (>>) :: m a -> m b -> m b
-  --   return :: a -> m a
-  return = pure
-  mv >>= k = undefined
-
 -------------------------------------------------
 -- Для типа данных OddC a (контейнер-последовательность, который по построению может содержать только нечетное число элементов) реализуйте функцию, конкатенирующую три таких контейнера в один:
 
@@ -87,7 +79,6 @@ tst3 = Bi 'i' 'j' (Un 'k')
 --GHCi> concat3OC tst1 tst2 tst3 =?= Bi 'a' 'b' (Bi 'c' 'd' (Bi 'e' 'f' (Bi 'g' 'h' (Bi 'i' 'j' (Un 'k')))))
 -- Обратите внимание, что соображения четности запрещают конкатенацию двух контейнеров OddC. Реализуйте всё «честно», не сводя к стандартным спискам.
 
-
 -------------------------------------------------
 -- Для типа данных OddC a реализуйте функцию
 concatOC :: OddC (OddC a) -> OddC a
@@ -99,6 +90,26 @@ concatOC (Bi x1 y1 z1)  = concat3OC x1 y1 $ concatOC z1
 -- GHCi> concatOC $ Un (Un 42) =?= Un 42
 -- GHCi> concatOC $ Bi tst1 tst2 (Un tst3) =?= Bi 'a' 'b' (Bi 'c' 'd' (Bi 'e' 'f' (Bi 'g' 'h' (Bi 'i' 'j' (Un 'k')))))
 
+-------------------------------------------------
+-- Сделайте тип данных OddC a представителем классов типов Functor, Applicative и Monad. Семантика должна быть подобной семантике представителей этих классов типов для списков: монада OddC должна иметь эффект вычисления с произвольным нечетным числом результатов:
+
+tst4 = Bi 10 20 (Un 30)
+tst5 = Bi 1 2 (Bi 3 4 (Un 5))
+-- GHCi> do {x <- tst4; y <- tst5; return (x + y)} =?= Bi 11 12 (Bi 13 14 (Bi 15 21 (Bi 22 23 (Bi 24 25 (Bi 31 32 (Bi 33 34 (Un 35)))))))
+-- GHCi> do {x <- tst5; y <- tst4; return (x + y)} =?= Bi 11 21 (Bi 31 12 (Bi 22 32 (Bi 13 23 (Bi 33 14 (Bi 24 34 (Bi 15 25 (Un 35)))))))
+
+-- Реализуйте всё «честно», не сводя к стандартным спискам. Функцию fail можно не реализовывать, полагаясь на реализацию по умолчанию.
+
+instance Monad OddC where
+  -- class Applicative m => Monad (m :: * -> *) where
+  --   (>>=) :: m a -> (a -> m b) -> m b
+  --   (>>) :: m a -> m b -> m b
+  --   return :: a -> m a
+  return = pure
+  (Un x)     >>= k  = k x
+  (Bi x y z) >>= k  = concat3OC (k x) (k y) (z >>= k)
+
+------------------------------------------------
 main :: IO ()
 main = do
   print $ "--- Applicative OddC ---"
@@ -112,3 +123,6 @@ main = do
   print $ "--- contactOC ---"
   print $ concatOC $ Un (Un 42)
   print $ concatOC $ Bi tst1 tst2 (Un tst3)
+  print $ "--- Monad OddC"
+  print $ do {x <- tst4; y <- tst5; return (x + y)}
+  print $ do {x <- tst5; y <- tst4; return (x + y)}
