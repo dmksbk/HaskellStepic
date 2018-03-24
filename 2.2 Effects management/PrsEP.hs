@@ -82,15 +82,7 @@ instance Applicative PrsEP where
   fp <*> vp = PrsEP fun where
     fun pos s = case runPrsEP fp pos s of
       (n, Left e)         -> (n, Left e)
-      (n, Right (f, s'))  -> case runPrsEP vp n s' of
-        (m, Left e)         -> (m, Left e)
-        (m, Right (v, s'')) -> (m, Right (f v, s''))
--- Better solution (not mine):
--- instance Applicative PrsEP where
---   pure x = PrsEP $ \i s -> (i, Right (x, s))
---   pf <*> px = PrsEP $ \i s -> case runPrsEP pf i s of
---                 (i', Left e) -> (i', Left e)
---                 (i', Right (f, s')) -> runPrsEP (f <$> px) i' s'
+      (n, Right (f, s'))  -> runPrsEP (f <$> vp) n s'
 
 anyEP   :: PrsEP Char
 anyEP = satisfyEP (const True)
