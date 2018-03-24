@@ -85,13 +85,30 @@ tst1 = Bi 'a' 'b' (Un 'c')
 tst2 = Bi 'd' 'e' (Bi 'f' 'g' (Un 'h'))
 tst3 = Bi 'i' 'j' (Un 'k')
 --GHCi> concat3OC tst1 tst2 tst3 =?= Bi 'a' 'b' (Bi 'c' 'd' (Bi 'e' 'f' (Bi 'g' 'h' (Bi 'i' 'j' (Un 'k')))))
-
 -- Обратите внимание, что соображения четности запрещают конкатенацию двух контейнеров OddC. Реализуйте всё «честно», не сводя к стандартным спискам.
+
+
+-------------------------------------------------
+-- Для типа данных OddC a реализуйте функцию
+concatOC :: OddC (OddC a) -> OddC a
+concatOC (Un x)         = x
+concatOC (Bi x1 y1 z1)  = concat3OC x1 y1 $ concatOC z1
+
+-- Она должна обеспечивать для типа OddC поведение, аналогичное поведению функции concat для списков:
+
+-- GHCi> concatOC $ Un (Un 42) =?= Un 42
+-- GHCi> concatOC $ Bi tst1 tst2 (Un tst3) =?= Bi 'a' 'b' (Bi 'c' 'd' (Bi 'e' 'f' (Bi 'g' 'h' (Bi 'i' 'j' (Un 'k')))))
 
 main :: IO ()
 main = do
+  print $ "--- Applicative OddC ---"
   print $ (+1) <$> cnt5
+  print $ "--- Foldable Oddc ---"
   print $ toList cnt5
   print $ sum cnt5
   print $ traverse (\x->[x+2,x-2]) cnt1
+  print $ "--- concat3OC ---"
   print $ concat3OC tst1 tst2 tst3
+  print $ "--- contactOC ---"
+  print $ concatOC $ Un (Un 42)
+  print $ concatOC $ Bi tst1 tst2 (Un tst3)
