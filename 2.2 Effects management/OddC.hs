@@ -77,7 +77,9 @@ instance Monad OddC where
 -- Для типа данных OddC a (контейнер-последовательность, который по построению может содержать только нечетное число элементов) реализуйте функцию, конкатенирующую три таких контейнера в один:
 
 concat3OC :: OddC a -> OddC a -> OddC a -> OddC a
-concat3OC = undefined
+concat3OC (Bi x1 x2 x3) y             z = Bi x1 x2 $ concat3OC x3 y z
+concat3OC (Un x)        (Bi y1 y2 y3) z = Bi x  y1 $ concat3OC (Un y2) y3 z
+concat3OC (Un x)        (Un y)        z = Bi x  y    z
 
 tst1 = Bi 'a' 'b' (Un 'c')
 tst2 = Bi 'd' 'e' (Bi 'f' 'g' (Un 'h'))
@@ -92,3 +94,4 @@ main = do
   print $ toList cnt5
   print $ sum cnt5
   print $ traverse (\x->[x+2,x-2]) cnt1
+  print $ concat3OC tst1 tst2 tst3
