@@ -45,7 +45,8 @@ charEP c = satisfyEP (== c)
 
 tsts1   :: [IO ()]
 tsts1 =
-  [ runPrsEP (charEP 'A') 0 "ABC"   =?= (1,Right ('A',"BC"))
+  [ lbl "runPrsEP"
+  , runPrsEP (charEP 'A') 0 "ABC"   =?= (1,Right ('A',"BC"))
   , runPrsEP (charEP 'A') 41 "BCD"  =?= (42,Left "pos 42: unexpected B")
   , runPrsEP (charEP 'A') 41 ""     =?= (42,Left "pos 42: unexpected end of input")
   ]
@@ -53,7 +54,8 @@ tsts1 =
 -- Вспомогательная функция parseEP дает возможность вызывать парсер более удобным образом по сравнению с runPrsEP, скрывая технические детали:
 tsts2   :: [IO ()]
 tsts2 =
-  [ parseEP (charEP 'A') "ABC"      =?= Right ('A',"BC")
+  [ lbl "parseEP"
+  , parseEP (charEP 'A') "ABC"      =?= Right ('A',"BC")
   , parseEP (charEP 'A') "BCD"      =?= Left "pos 1: unexpected B"
   , parseEP (charEP 'A') ""         =?= Left "pos 1: unexpected end of input"
   ]
@@ -65,6 +67,47 @@ satisfyEP pr = PrsEP fun where
   fun pos (x:xs) | pr x       = (pos + 1, Right (x, xs))
                  | otherwise  = (pos + 1, Left $ "pos " ++ show (pos+1) ++ ": unexpected " ++ [x])
 
+--------------------------------------------------------------------------------
+-- Сделайте парсер PrsEP a представителем классов типов Functor и Applicative, обеспечив следующее поведение:
+
+instance Functor PrsEP where
+  fmap f par = PrsEP fun where
+    fun pos s = case runPrsEP par pos s of
+      (n, Left  e)       -> (n, Left e)
+      (n, Right (v, xs)) -> (n, Right (f v, xs))
+
+instance Applicative PrsEP where
+  pure v = PrsEP fun where
+    fun pos s = (pos, Right (v, s))
+  fp <*> vp = PrsEP fun where
+    fun pos s = case runPrsEP fp pos s of
+      (n, Left e)         -> (n, Left e)
+      (n, Right (f, s'))  -> case runPrsEP vp n s' of
+        (m, Left e)         -> (m, Left e)
+        (m, Right (v, s'')) -> (m, Right (f v, s''))
+-- Better solution (not mine):
+-- instance Applicative PrsEP where
+--   pure x = PrsEP $ \i s -> (i, Right (x, s))
+--   pf <*> px = PrsEP $ \i s -> case runPrsEP pf i s of
+--                 (i', Left e) -> (i', Left e)
+--                 (i', Right (f, s')) -> runPrsEP (f <$> px) i' s'
+
+anyEP   :: PrsEP Char
+anyEP = satisfyEP (const True)
+
+testP   :: PrsEP (Char, Char)
+testP = (,) <$> anyEP <* charEP 'B' <*> anyEP
+
+tsts3   :: [IO ()]
+tsts3 =
+  [ lbl "Tests 3"
+  , runPrsEP (pure 42) 0 "ABCDEFG"  =?= (0,Right (42,"ABCDEFG"))
+  , runPrsEP testP 0 "ABCDE"        =?= (3,Right (('A','C'),"DE"))
+  , parseEP testP "BCDE"            =?= Left "pos 2: unexpected C"
+  , parseEP testP ""                =?= Left "pos 1: unexpected end of input"
+  , parseEP testP "B"               =?= Left "pos 2: unexpected end of input"
+  ]
+
 main           :: IO ()
 main = sequence_ $
-  tsts1 ++ tsts2
+  tsts1 ++ tsts2 ++ tsts3
