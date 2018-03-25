@@ -2,6 +2,8 @@
 
 module PrsEP where
 
+import Control.Applicative
+
 ---- My Test -------------------
 rt  :: String
 rt = "\x1b[31m"
@@ -104,18 +106,41 @@ tsts3 =
 
 -- Сделайте парсер представителем класса типов Alternative, обеспечив следующее поведение для пары неудачных альтернатив: сообщение об ошибке возвращается из той альтернативы, которой удалось распарсить входную строку глубже.
 
-tripleP [a,b,c] = (\x y z -> [x,y,z]) <$> charEP a <*> charEP b <*>  charEP c
+instance Alternative PrsEP where
+  -- class Applicative f => Alternative f where
+  --   empty :: f a
+  --   (<|>) :: f a -> f a -> f a
+  empty = PrsEP fun where
+    fun pos _ = (pos, Left $ "pos " ++ show pos ++ ": empty alternative")
+  l <|>  r = PrsEP fun where
+    fun pos s = case runPrsEP l pos s of
+      -- Test left alternative and if it fails we return right one
+      (_, Left _)           -> runPrsEP r pos s
+      -- If left alternative succeds, we test the right one and if it fails,
+      -- we return left part
+      (nl, Right (vl, sl))  -> case runPrsEP r pos s of
+        (_, Left _)             -> (nl, Right (vl, sl))
+        -- If both left and right alternatives succed,
+        -- we choose the deepest one: which have biggest n in (n, Left (v, s))
+        ((nr, Right (vr, sr)))  -> if nl >= nr
+          then (nl, Right (vl, sl))
+          else (nr, Right (vr, sr))
 
+tripleP   :: String -> PrsEP String
+tripleP [a,b,c] = (\x y z -> [x,y,z]) <$> charEP a <*> charEP b <*>  charEP c
+tripleP _       = error "Wrong number of parameters for tripleP"
+
+tsts4   :: [IO ()]
 tsts4 =
-  [ runPrsEP empty 0 "ABCDEFG"                      =?= (0,Left "pos 0: empty alternative")
+  [ lbl "Testing Alternatives"
+  , runPrsEP (empty::PrsEP Char) 0 "ABCDEFG"        =?= (0, Left "pos 0: empty alternative")
   , parseEP (tripleP "ABC" <|> tripleP "ADC") "ABE" =?= Left "pos 3: unexpected E"
   , parseEP (tripleP "ABC" <|> tripleP "ADC") "ADE" =?= Left "pos 3: unexpected E"
   , parseEP (tripleP "ABC" <|> tripleP "ADC") "AEF" =?= Left "pos 2: unexpected E"
   ]
 
-
 -------------------------------------------------------------------------------
 
 main           :: IO ()
 main = sequence_ $
-  tsts1 ++ tsts2 ++ tsts3
+  tsts1 ++ tsts2 ++ tsts3 ++ tsts4
