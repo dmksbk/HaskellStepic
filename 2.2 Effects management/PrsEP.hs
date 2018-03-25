@@ -114,17 +114,14 @@ instance Alternative PrsEP where
     fun pos _ = (pos, Left $ "pos " ++ show pos ++ ": empty alternative")
   l <|>  r = PrsEP fun where
     fun pos s = case runPrsEP l pos s of
-      -- Test left alternative and if it fails we return right one
-      (_, Left _)           -> runPrsEP r pos s
-      -- If left alternative succeds, we test the right one and if it fails,
-      -- we return left part
-      (nl, Right (vl, sl))  -> case runPrsEP r pos s of
-        (_, Left _)             -> (nl, Right (vl, sl))
-        -- If both left and right alternatives succed,
-        -- we choose the deepest one: which have biggest n in (n, Left (v, s))
-        ((nr, Right (vr, sr)))  -> if nl >= nr
-          then (nl, Right (vl, sl))
-          else (nr, Right (vr, sr))
+      -- Test left alternative and if it fails we test right one
+      -- If right part fails, but is deeper, we return right one
+      -- otherwise - left
+      (nl, Left ml)         -> case runPrsEP r pos s of
+        (nr, Left mr)         -> if nl >= nr then (nl, Left ml) else (nr, Left mr)
+        (nr, Right (vr, sr))  -> (nr, Right (vr, sr))
+      -- If left alternative succeds, we return it without parsing right one
+      (nl, Right (vl, sl))  -> (nl, Right (vl, sl))
 
 tripleP   :: String -> PrsEP String
 tripleP [a,b,c] = (\x y z -> [x,y,z]) <$> charEP a <*> charEP b <*>  charEP c
