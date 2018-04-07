@@ -1,5 +1,5 @@
 module Except
-    (
+    ( Except(..), except, withExcept, throwE, catchE
     ) where
 
 import           Control.Applicative (Alternative (empty, (<|>)))
@@ -31,3 +31,19 @@ withExcept :: (e -> e') -> Except e a -> Except e' a
 withExcept f res = case runExcept res of
   Left e  -> Except . Left . f $ e
   Right v -> Except . Right $ v
+-- end task 2.3.1.6
+
+throwE  :: e -> Except e a
+throwE = except . Left
+
+catchE  :: Except e a -> (e -> Except e' a) -> Except e' a
+m `catchE` h =
+  case runExcept m of
+    Left e  -> h e
+    Right r -> except (Right r)
+
+-- Использование:
+-- do {action1; action2; action3} `catchE` handler
+
+-- Закон:
+-- catchE h (throwE e) == h e
