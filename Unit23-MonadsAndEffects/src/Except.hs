@@ -18,6 +18,13 @@ instance Applicative (Except e) where
   pure = return
   (<*>) = ap
 
+instance Monad (Except e) where
+  return a = Except (Right a)
+  m >>= k =
+    case runExcept m of
+      Left e  -> Except (Left e)
+      Right x -> k x
+
 -- | task 2.3.1.6
 -- Реализуйте функцию withExcept :: (e -> e') -> Except e a -> Except e' a, позволящую, если произошла ошибка, применить к ней заданное преобразование.
 withExcept :: (e -> e') -> Except e a -> Except e' a
