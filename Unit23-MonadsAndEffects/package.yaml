@@ -1,0 +1,48 @@
+name:                Unit23-MonadsAndEffects
+version:             0.1.0.0
+github:              "dmksbk/Unit23-MonadsAndEffects"
+license:             BSD3
+author:              "dmksbk"
+maintainer:          "dmksbk@gmail.com"
+copyright:           "Dmitriy Semenov (C) 2018"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            edutcation
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/dmksbk/Unit23-MonadsAndEffects#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+
+executables:
+  Unit23-MonadsAndEffects-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Unit23-MonadsAndEffects
+
+tests:
+  Unit23-MonadsAndEffects-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - Unit23-MonadsAndEffects
