@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module ReadError
-    (
+    ( ReadError(..), tryRead, SumError(..), trySum
     ) where
 
 import           Control.Monad (zipWithM)

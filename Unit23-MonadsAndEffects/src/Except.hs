@@ -18,12 +18,23 @@ instance Applicative (Except e) where
   pure = return
   (<*>) = ap
 
+instance Monoid e => Alternative (Except e) where
+  empty = mzero
+  (<|>) = mplus
+
 instance Monad (Except e) where
   return a = Except (Right a)
   m >>= k =
     case runExcept m of
       Left e  -> Except (Left e)
       Right x -> k x
+
+instance Monoid e => MonadPlus (Except e) where
+  mzero = Except (Left mempty)
+  Except x `mplus` Except y = Except $
+    case x of
+      Left e -> either (Left . mappend e) Right y
+      r      -> r
 
 -- | task 2.3.1.6
 -- Реализуйте функцию withExcept :: (e -> e') -> Except e a -> Except e' a, позволящую, если произошла ошибка, применить к ней заданное преобразование.
